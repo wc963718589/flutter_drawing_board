@@ -182,13 +182,25 @@ class _DeepPainter extends CustomPainter {
       return;
     }
 
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas tempCanvas = Canvas(
+        recorder, Rect.fromPoints(Offset.zero, size.bottomRight(Offset.zero)));
+
     canvas.saveLayer(Offset.zero & size, Paint());
 
     for (int i = 0; i < controller.currentIndex; i++) {
       contents[i].draw(canvas, size, true);
+      contents[i].draw(tempCanvas, size, true);
     }
 
     canvas.restore();
+
+    final ui.Picture picture = recorder.endRecording();
+    picture
+        .toImage(size.width.toInt(), size.height.toInt())
+        .then((ui.Image value) {
+      controller.cachedImage = value;
+    });
   }
 
   @override
