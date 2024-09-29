@@ -139,12 +139,19 @@ class _UpPainter extends CustomPainter {
 
     if (controller.eraserContent != null) {
       canvas.saveLayer(Offset.zero & size, Paint());
+      final List<PaintContent> contents = <PaintContent>[
+        ...controller.getHistory,
+        if (controller.eraserContent != null) controller.eraserContent!,
+      ];
 
-      if (controller.cachedImage != null) {
-        canvas.drawImage(controller.cachedImage!, Offset.zero, Paint());
+      if (contents.isEmpty) {
+        return;
       }
-      controller.eraserContent?.draw(canvas, size, false);
+      for (int i = 0; i < controller.currentIndex; i++) {
+        contents[i].draw(canvas, size, true);
+      }
 
+      controller.eraserContent?.draw(canvas, size, false);
       canvas.restore();
     } else {
       controller.currentContent?.draw(canvas, size, false);
@@ -166,7 +173,6 @@ class _DeepPainter extends CustomPainter {
     if (controller.eraserContent != null) {
       return;
     }
-
     final List<PaintContent> contents = <PaintContent>[
       ...controller.getHistory,
       if (controller.eraserContent != null) controller.eraserContent!,
@@ -176,25 +182,13 @@ class _DeepPainter extends CustomPainter {
       return;
     }
 
-    final ui.PictureRecorder recorder = ui.PictureRecorder();
-    final Canvas tempCanvas = Canvas(
-        recorder, Rect.fromPoints(Offset.zero, size.bottomRight(Offset.zero)));
-
     canvas.saveLayer(Offset.zero & size, Paint());
 
     for (int i = 0; i < controller.currentIndex; i++) {
       contents[i].draw(canvas, size, true);
-      contents[i].draw(tempCanvas, size, true);
     }
 
     canvas.restore();
-
-    final ui.Picture picture = recorder.endRecording();
-    picture
-        .toImage(size.width.toInt(), size.height.toInt())
-        .then((ui.Image value) {
-      controller.cachedImage = value;
-    });
   }
 
   @override
